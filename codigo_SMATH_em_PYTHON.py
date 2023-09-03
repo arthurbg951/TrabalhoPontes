@@ -1,9 +1,15 @@
 # DADOS DO PROJETO
+print(f'### DADOS DO PROJETO ###')
 # DEIXAR SEMPRE OS DADOS NO SI
-fck = 20e6  # MPa
+fck = 20  # MPa
 peso_especifico_concreto = 25  # kN/m³
 peso_especifico_asfalto = 24  # kN/m³
+print(f'fck: {fck} MPa')
+print(f'peso especifico concreto: {peso_especifico_concreto} kN/m³')
+print(f'peso especifico asfalto: {peso_especifico_asfalto} kN/m³')
 
+# CALCULOS DEFINIDOS EM REUNIÃO
+print(f'\n### CALCULOS DEFINIDOS EM REUNIÃO ###')
 # ÁREA DA LONGARINA (completa)
 area_longarina = 1.833  # m²
 q_longarina = peso_especifico_concreto * area_longarina
@@ -49,32 +55,3 @@ area_cortina = 0.713  # m²
 comprimento_cortina = 10.20  # m
 q_cortina = peso_especifico_concreto * area_cortina * comprimento_cortina
 print(f'Carregamento da cortina: {q_cortina:.3f} kN')
-
-
-# CARREGAMENTOS FTOOL
-print()
-# CARGAS DISTRIBUIDAS
-# SUBINDO
-q_subindo_pyi = q_longarina + q_guarda_roda + q_pavimento + q_tabuleiro
-q_subindo_pyj = q_subindo_pyi + (q_max_triangulo - q_longarina)
-print(f'subindo Pyi: {q_subindo_pyi:.3f} kN/m² Pyj: {q_subindo_pyj:.3f} kN/m²')
-# DESCENDO
-q_descendo_pyi = q_subindo_pyi + (q_max_triangulo - q_longarina)
-q_descendo_pyj = q_longarina + q_guarda_roda + q_pavimento + q_tabuleiro
-print(f'descendo Pyi: {q_subindo_pyi:.3f} kN/m² Pyj: {q_descendo_pyj:.3f} kN/m²')
-# LONGARINA
-q_longarina = q_subindo_pyi
-print(f'longarina: {q_longarina:.3f} kN/m²')
-# CARGAS NODAIS
-# TABULEIRO
-q_tabuleiro
-print(f'tabuleiro: {q_tabuleiro:.3f} kN')
-# TRANSVERSINA PILAR
-q_transversina_pilar /= 2
-print(f'transversina pilar: {q_transversina_pilar:.3f} kN')
-# TRANSVERSINA VÃO
-q_transversina /= 2
-print(f'transversina vão: {q_transversina:.3f} kN')
-# CORTINA
-q_cortina /= 2
-print(f'cortina: {q_cortina:.3f} kN')
