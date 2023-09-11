@@ -52,6 +52,6 @@ print(f'Carregamento da transversina do pilar: {q_transversina_pilar:.3f} kN')
 
 # ÁREA DA CORTINA (somente 1 cortina)
 area_cortina = 0.713  # m²
-comprimento_cortina = 10.20  # m
-q_cortina = peso_especifico_concreto * area_cortina * comprimento_cortina
+comprimento_cortina = 10.20 / 2  # m
+q_cortina = peso_especifico_concreto * (area_cortina * comprimento_cortina - area_longarina * 0.25)
 print(f'Carregamento da cortina: {q_cortina:.3f} kN')
