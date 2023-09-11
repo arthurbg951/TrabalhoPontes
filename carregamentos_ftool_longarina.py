@@ -8,6 +8,7 @@ from codigo_SMATH_em_PYTHON import (
     q_transversina_pilar,
     q_cortina
 )
+
 # CARREGAMENTOS FTOOL
 print(f'\n### CARREGAMENTOS FTOOL ###')
 # CARGAS DISTRIBUIDAS
