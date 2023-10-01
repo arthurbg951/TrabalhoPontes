@@ -10,7 +10,7 @@ from codigo_SMATH_em_PYTHON import (
 )
 
 # CARREGAMENTOS FTOOL
-print(f'\n### CARREGAMENTOS FTOOL ###')
+print(f'### CARREGAMENTOS FTOOL ###')
 # CARGAS DISTRIBUIDAS
 print(f' --> CARGAS DISTRIBUIDAS')
 # SUBINDO

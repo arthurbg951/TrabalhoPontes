@@ -9,7 +9,7 @@ from codigo_SMATH_em_PYTHON import (
 from ABNT_NBR_7188 import q_passeio, p
 
 # CARREGAMENTOS FTOOL
-print(f'\n### CARREGAMENTOS FTOOL ###')
+print(f'### CARREGAMENTOS FTOOL ###')
 # CARGAS NODAIS
 print(f' --> CARGAS NODAIS')
 # GUARDA RODA

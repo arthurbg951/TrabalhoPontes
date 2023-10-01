@@ -1,5 +1,5 @@
 # DADOS DO PROJETO
-print(f'\n### DADOS DO PROJETO ###')
+print(f'### DADOS DO PROJETO ###')
 # DEIXAR SEMPRE OS DADOS NO SI
 fck = 20  # MPa
 peso_especifico_concreto = 25  # kN/m³

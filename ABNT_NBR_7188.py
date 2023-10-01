@@ -1,4 +1,4 @@
-print(f'\n### ABNT NBR 7188 ###')
+print(f'### ABNT NBR 7188 ###')
 '''5 Ações em pontes e viadutos'''
 '''
 5.1 Cargas móveis
@@ -72,3 +72,8 @@ def CIA(tipo_estrutura: str) -> float:
         return 1.15
     else:
         raise Exception('O tipo da estrutura definido em norma é apenas concreto,mista ou aço.')
+
+
+if __name__ == '__main__':
+    fator_de_impacto = CIA('concreto') * CNF(2) * CIV(20)
+    print(f'Fator de impacto calculado: {fator_de_impacto:.3f}')
