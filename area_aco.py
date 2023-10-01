@@ -19,14 +19,13 @@ fck = 20e6
 fcd = fck / 1.4
 
 # Aço
+bitola = 22  # mm
 fy = 500e6
 fyd = fy / 1.15
 
 # Carregamento e dimensões
-L = 8
-q = 15e3
-Mk = 534_700
-Md = 1.4 * 6325.547e3
+Mk = 6205.636e3
+Md = 1.4 * Mk
 
 # Equação x/d
 a = 0.4
@@ -40,7 +39,6 @@ try:
 except:
     ...
 
-
 try:
     raiz2 = (-b - math.sqrt(b**2 - 4 * a * c)) / (2 * a)
 except:
@@ -49,6 +47,7 @@ except:
 epslon = min(raiz1, raiz2)
 x = epslon * d
 y = 0.8 * x
+
 if y > d1:
     raise Exception('Linha neutra fora da mesa.')
 
@@ -73,9 +72,10 @@ print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 As = Md / (fyd * (d - 0.4 * x))
 taxa_armadura = 0.208 / 100
 As_min = taxa_armadura * tw * (d + d_linha)
+
 if As_min > As:
     As = As_min
-bitola = 22
+
 area_bitola = math.pi * (bitola / 1e3)**2 / 4
 num_bitolas = round(As / area_bitola)
 
