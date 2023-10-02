@@ -1,7 +1,7 @@
 import math
 
 # Dimensões da viga (Seção T)
-b1 = 2.10
+b1 = 0.40
 b2 = 0.40
 tw = 0.40
 
@@ -19,18 +19,18 @@ fck = 20e6
 fcd = fck / 1.4
 
 # Aço
-bitola = 22  # mm
+bitola = 20  # mm
 fy = 500e6
 fyd = fy / 1.15
 
-# Carregamento e dimensões
-Mk = 6205.636e3
-Md = 1.4 * Mk
+# Carregamento
+Md = 6_521.597e3  # Seção A-A Momento negativo
+# Md = 9_031.429e3 # Seção B-B Momento positivo
 
 # Equação x/d
 a = 0.4
 b = -1
-c = Md / (0.68 * b1 * math.pow(d, 2) * fcd)
+c = Md / (0.68 * b1 * (d**2) * fcd)
 
 raiz1, raiz2 = None, None
 
@@ -44,18 +44,21 @@ try:
 except:
     ...
 
+if raiz1 == None and raiz2 == None:
+    raise Exception('Dimensões da viga não válidas.')
+
 epslon = min(raiz1, raiz2)
 x = epslon * d
 y = 0.8 * x
 
-if y > d1:
+if y > d1 and not (b1 == b2 == tw):
     raise Exception('Linha neutra fora da mesa.')
 
 # Domínios
 dominio = None
-if epslon <= 0.167:
+if epslon < 0:
     dominio = 1
-elif 0.167 < epslon <= 0.259:
+elif 0 < epslon <= 0.259:
     dominio = 2
 elif 0.259 < epslon <= 0.450:
     dominio = '3a'
