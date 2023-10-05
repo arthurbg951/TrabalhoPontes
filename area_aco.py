@@ -1,6 +1,6 @@
 import math
 
-# Dimensões da viga (Seção T)
+# Dimensões da viga (Seção T) OBS: Verificar secao.png
 b1 = 0.40
 b2 = 0.40
 tw = 0.40
@@ -24,8 +24,9 @@ fy = 500e6
 fyd = fy / 1.15
 
 # Carregamento
-Md = 6_521.597e3  # Seção A-A Momento negativo
+# Md = 6_521.597e3  # Seção A-A Momento negativo
 # Md = 9_031.429e3 # Seção B-B Momento positivo
+Md = 6300e3
 
 # Equação x/d
 a = 0.4
@@ -33,19 +34,13 @@ b = -1
 c = Md / (0.68 * b1 * (d**2) * fcd)
 
 raiz1, raiz2 = None, None
+delta = b**2 - 4 * a * c
 
-try:
-    raiz1 = (-b + math.sqrt(b**2 - 4 * a * c)) / (2 * a)
-except:
-    ...
-
-try:
-    raiz2 = (-b - math.sqrt(b**2 - 4 * a * c)) / (2 * a)
-except:
-    ...
-
-if raiz1 == None and raiz2 == None:
+if delta < 0:
     raise Exception('Dimensões da viga não válidas.')
+
+raiz1 = (-b + math.sqrt(delta)) / (2 * a)
+raiz2 = (-b - math.sqrt(delta)) / (2 * a)
 
 epslon = min(raiz1, raiz2)
 x = epslon * d
@@ -68,6 +63,8 @@ elif 0.628 < epslon <= 1:
     dominio = 4
 elif 1 < epslon:
     dominio = 5
+else:
+    raise Exception('Intervalo do domínio não definido.')
 
 print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 
@@ -82,4 +79,4 @@ if As_min > As:
 area_bitola = math.pi * (bitola / 1e3)**2 / 4
 num_bitolas = round(As / area_bitola)
 
-print(f'Area de aço={As}; Area de aço min={As_min} -> {num_bitolas} Ø {bitola}mm')
+print(f'Area de aço calculado={As}; Area de aço min={As_min} -> {num_bitolas} Ø {bitola}mm')
