@@ -26,7 +26,7 @@ fyd = fy / 1.15
 # Carregamento
 # Md = 6_521.597e3  # Seção A-A Momento negativo
 # Md = 9_031.429e3 # Seção B-B Momento positivo
-Md = 6300e3
+Md = 5972.69895e3
 
 # Equação x/d
 a = 0.4

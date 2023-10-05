@@ -77,3 +77,5 @@ def CIA(tipo_estrutura: str) -> float:
 if __name__ == '__main__':
     fator_de_impacto = CIA('concreto') * CNF(2) * CIV(20)
     print(f'Fator de impacto calculado: {fator_de_impacto:.3f}')
+else:
+    print(f'#####################')
