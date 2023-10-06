@@ -1,6 +1,5 @@
 from ABNT_NBR_7188 import p, P, CIA, CIV, CNF
 
-
 # Pesos específicos Materiais
 peso_especifico_concreto = 25  # kN/m³
 peso_especifico_pavimento = 24  # kN/m³
@@ -58,17 +57,17 @@ fator_de_impacto = CNF(2) * CIA('concreto') * CIV(20)
 
 
 print(f'CARGAS DISTRIBUÍDAS:')
-print(f'Carga continua: {q_distribuido_continuo}')
-print(f'Carga máxima triangular: {q_max_triangulo}')
+print(f'    Carga continua: {q_distribuido_continuo}')
+print(f'    Carga máxima triangular: {q_max_triangulo}')
 
 print(f'CARGAS CONCENTRADAS:')
-print(f'Transversina no pilar: {q_transversina_pilar}')
-print(f'Transversina no vao: {q_transversina_vao}')
-print(f'Cortina: {q_cortina}')
+print(f'    Transversina no pilar: {q_transversina_pilar}')
+print(f'    Transversina no vao: {q_transversina_vao}')
+print(f'    Cortina: {q_cortina}')
 
 print(f'TREM TIPO:')
-print(f'Carga concentrada: {P}')
-print(f'Externo: {q_externo}')
-print(f'Interno: {q_interno}')
+print(f'    Carga concentrada: {P}')
+print(f'    Externo: {q_externo}')
+print(f'    Interno: {q_interno}')
 
 print(f'FATOR DE IMPACTO={fator_de_impacto}')

@@ -74,8 +74,8 @@ def CIA(tipo_estrutura: str) -> float:
         raise Exception('O tipo da estrutura definido em norma é apenas concreto,mista ou aço.')
 
 
+print(f'#####################')
+
 if __name__ == '__main__':
     fator_de_impacto = CIA('concreto') * CNF(2) * CIV(20)
     print(f'Fator de impacto calculado: {fator_de_impacto:.3f}')
-else:
-    print(f'#####################')

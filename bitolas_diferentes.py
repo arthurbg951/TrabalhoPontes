@@ -9,7 +9,7 @@ def check_bitola(area_aco: float, *args: tuple[int, float]) -> None:
         aco_total += area_bitola * qtd_bitolas
         qtd_total_bitolas += qtd_bitolas
 
-    print(f'Calculo de aço com bitolas diferentes:')
+    print(f'Testando aço com bitolas diferentes:')
 
     print(f'    quantitativo:')
     for qtd_bitolas, bitola in args:
