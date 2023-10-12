@@ -1,9 +1,10 @@
 import math
 
+
 # Dimensões da viga (Seção T) OBS: Verificar secao.png
-b1 = 0.4
-b2 = 0.4
-tw = 0.4
+b1 = 0.80
+b2 = 0.80
+tw = 0.80
 
 d1 = 0.20
 d2 = 0.22
@@ -11,7 +12,7 @@ d3 = 1.63
 d4 = 0
 d5 = 0
 
-d_linha = 0.1
+d_linha = 0.03
 d = (d1 + d2 + d3 + d4 + d5) - d_linha
 
 # Concreto
@@ -19,7 +20,7 @@ fck = 20e6
 fcd = fck / 1.4
 
 # Aço
-diametro_bitola = 20  # mm
+diametro_bitola = 22  # mm
 diametro_bitola_pele = 10  # mm
 diametro_estribo = 12.5  # mm
 fy = 500e6
@@ -28,7 +29,7 @@ fyd = fy / 1.15
 # Carregamentos
 # Seção A-A
 # Momento negativo
-Mg = 1.35 * 1304.017e3
+Mg = 1.35 * 2661.168e3
 Mq = 1.5 * 2808.184e3
 Md = Mg + Mq
 # Momento positivo
@@ -38,23 +39,35 @@ Md = Mg + Mq
 
 # Seção B-B
 # Momento positivo
-# Mg = 1.35 * 1667.9e3
+# Mg = 1.35 * 1639.392e3
 # Mq = 1.5 * 3676.279e3
 # Md = Mg + Mq
 
+# Seção B-B
+# Momento negativa
+# Mg = 1.35 * 0
+# Mq = 1.5 * 1445.278e3
+# Md = Mg + Mq
+
+
 # Cortante
 # Seção AA
-# Vsg = 1.35 * 880.122e3
-# Vsq = 1.5 * 1041.702e3
-# Vsd = Vsg + Vsq
+Vsg = 1.35 * 880.122e3
+Vsq = 1.5 * 1041.702e3
+Vsd = Vsg + Vsq
+
+
 # Seção BB
-Vsg = 1.35 * 687.624e3
-Vsq = 1.5 * 920.743e3
-Vsd = Vsg + Vsq
+# Vsg = 1.35 * 687.624e3
+# Vsq = 1.5 * 920.743e3
+# Vsd = Vsg + Vsq
+
+
 # sEÇÃO DOIDA
-Vsg = 1.35 * 96.199e3
-Vsq = 1.5 * 483.761e3
-Vsd = Vsg + Vsq
+# Vsg = 1.35 * 96.199e3
+# Vsq = 1.5 * 483.761e3
+# Vsd = Vsg + Vsq
+print(f'Md={Md}')
 
 # Equação x/d
 a = 0.4
@@ -68,6 +81,7 @@ if delta < 0:
 
 raiz1 = (-b + math.sqrt(delta)) / (2 * a)
 raiz2 = (-b - math.sqrt(delta)) / (2 * a)
+
 
 epslon = min(raiz1, raiz2)
 x = epslon * d
