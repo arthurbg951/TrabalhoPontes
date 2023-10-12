@@ -31,7 +31,7 @@ comprimento_metade_cortina = 5.10  # m
 
 # CARREGAMENTOS FTOOL
 # Distribuído
-q_recapeamento = 2 * 9.40 / 2  # kN/m
+q_recapeamento = 2 * 9.40 / 2
 q_pavimento = area_metade_pavimento * peso_especifico_pavimento
 q_longarina = area_secao_t * peso_especifico_concreto
 q_tabuleiro = area_metade_tabuleiro * peso_especifico_concreto
@@ -51,6 +51,7 @@ q_cortina = (volume_total_cortina - volume_viga_t_na_cortina - volume_tabuleiro_
 q_cortina += 0.391 * 3.6 * peso_especifico_concreto + 2.891 * 0.4 * peso_especifico_concreto  # Ala
 q_cortina += 4.64 * 3.6 * 0.3 * peso_especifico_concreto  # Placa de transição
 q_cortina += (9.4 * 3.6 * 2) / 2  # Recapeamento na placa de transição
+q_cortina += 4.64 * 3.60 * 0.07 * 24  # Pavimentação
 q_cortina += 0.01 * 5.1 * peso_especifico_concreto + (1.5 + 1.3 + 1.5 + 0.4) * 0.042 * peso_especifico_concreto  # Acrescimos no fim da ponte
 
 # Trem tipo
