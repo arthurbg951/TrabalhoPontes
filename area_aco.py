@@ -93,9 +93,9 @@ if y > d1 and not (b1 == b2 == tw):
 
 # Domínios
 dominio = None
-if epslon <= 0:
+if epslon < 0:
     dominio = 1
-elif 0 < epslon <= 0.259:
+elif 0 <= epslon <= 0.259:
     dominio = 2
 elif 0.259 < epslon <= 0.450:
     dominio = '3a'
