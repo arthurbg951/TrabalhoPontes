@@ -1,4 +1,5 @@
 import math
+from funcoes import arredonda_pra_cima
 
 
 # Dimensões da viga (Seção T) OBS: Verificar secao.png
@@ -111,6 +112,7 @@ print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 
 # Area de aço
 As_calculado = Md / (fyd * (d - 0.4 * x))
+As = As_calculado
 taxa_armadura = 0.208 / 100
 As_min = taxa_armadura * tw * (d + d_linha)
 
@@ -118,7 +120,7 @@ if As_min > As_calculado:
     As = As_min
 
 area_bitola = math.pi * (diametro_bitola / 1e3)**2 / 4
-num_bitolas = round(As / area_bitola)
+num_bitolas = arredonda_pra_cima(As / area_bitola)
 
 print(f'Area de aço calculado={As_calculado}; Area de aço min={As_min} -> {num_bitolas} Ø {diametro_bitola}mm')
 
@@ -126,7 +128,7 @@ print(f'Area de aço calculado={As_calculado}; Area de aço min={As_min} -> {num
 if d1 + d2 + d3 + d4 + d5 >= 0.6:
     As_pele = (0.1 / 100) * tw * (d1 + d2 + d3 + d4 + d5)
     area_bitola = math.pi * (diametro_bitola_pele / 1e3)**2 / 4
-    num_bitolas = round(As_pele / area_bitola)
+    num_bitolas = arredonda_pra_cima(As_pele / area_bitola)
 
     print(f'Area de aço pele={As_pele} -> {num_bitolas} Ø {diametro_bitola_pele}mm')
 
@@ -154,7 +156,7 @@ if Vsd <= Vrd2:
         Asw = Asw_min
 
     area_estribo = math.pi * (diametro_estribo / 1e3)**2 / 4
-    num_estribos = round(Asw / area_estribo)
+    num_estribos = arredonda_pra_cima(Asw / area_estribo)
     # Espaçamento de estribos
     espacamento_max_estribos: float = None
     if Vsd <= 0.67 * Vrd2:
