@@ -110,17 +110,17 @@ else:
 print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 
 # Area de aço
-As = Md / (fyd * (d - 0.4 * x))
+As_calculado = Md / (fyd * (d - 0.4 * x))
 taxa_armadura = 0.208 / 100
 As_min = taxa_armadura * tw * (d + d_linha)
 
-if As_min > As:
+if As_min > As_calculado:
     As = As_min
 
 area_bitola = math.pi * (diametro_bitola / 1e3)**2 / 4
 num_bitolas = round(As / area_bitola)
 
-print(f'Area de aço calculado={As}; Area de aço min={As_min} -> {num_bitolas} Ø {diametro_bitola}mm')
+print(f'Area de aço calculado={As_calculado}; Area de aço min={As_min} -> {num_bitolas} Ø {diametro_bitola}mm')
 
 # Armadura de pele
 if d1 + d2 + d3 + d4 + d5 >= 0.6:
