@@ -54,11 +54,24 @@ q_cortina += (9.4 * 3.6 * 2) / 2  # Recapeamento na placa de transição
 q_cortina += 0.01 * 5.1 * peso_especifico_concreto + (1.5 + 1.3 + 1.5 + 0.4) * 0.042 * peso_especifico_concreto  # Acrescimos no fim da ponte
 
 # Trem tipo
-P = 2 * P  # kN
-# q_externo = p * (2.1 - 0.4 + 6) / 2
-# q_interno = p * (2.1 - 0.4 + 6 - 3) / 2
-q_externo = p * (10.2 - 0.8) / 2
-q_interno = p * (10.2 - 0.8 - 3) / 2
+# Método 1
+Pontual = 2 * P  # kN
+q_externo = p * (2.1 - 0.4 + 6) / 2
+q_interno = p * (2.1 - 0.4 + 6 - 3) / 2
+# Método 2 (segundo o livro - linha de fluência)
+Q = P
+y2 = 5.2 / 6
+b = 4.7 / 6
+y1 = 7.2 / 6
+a = y1 * 7.7 / 7.2
+A1 = (y1 + y2) * 2.5 / 2
+A2 = b * 4.7 / 2
+q = p
+
+Q1 = Q * (y1 + y2)
+q1 = q * (A1 + A2)
+q2 = q * A2
+
 fator_de_impacto = CNF(2) * CIA('concreto') * CIV(20)
 
 
