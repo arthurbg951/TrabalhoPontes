@@ -1,9 +1,7 @@
 import math
 
 def arredonda_pra_cima(valor: float) -> int:
-    resto = valor % 1
-    arredondado_pra_cima = int(valor + (1 - resto))
-    return arredondado_pra_cima
+    return int(valor + (1 - valor % 1))
 
 def check_bitola(area_aco: float, *args: tuple[int, float]) -> None:
     aco_total = 0

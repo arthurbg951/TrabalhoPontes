@@ -150,7 +150,7 @@ if Vsd <= Vrd2:
     Asw = Vsw / (0.9 * d * fywd * (math.sin(alfa) + math.cos(alfa)))
     fctm = 0.3 * math.pow(fck / 1e6, 2 / 3)
     fywk = fy
-    Asw_min = 0.2 * (fctm / fywk) * tw * math.sin(alfa)
+    Asw_min = 0.2 * (fctm * 1e6 / fywk) * tw * math.sin(alfa)
 
     if Asw < Asw_min:
         Asw = Asw_min
