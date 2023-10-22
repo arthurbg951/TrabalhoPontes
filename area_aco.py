@@ -1,113 +1,118 @@
 import math
-from funcoes import arredonda_pra_cima
+from funcoes import arredonda_pra_cima, arredonda_pra_baixo
+from Secoes import GirderSection
+
+
+def calcular_epslon(Md, b1, d, fcd):
+    '''
+    Equação que retorna x/d
+    '''
+    a = 0.4
+    b = -1
+    c = Md / (0.68 * b1 * (d**2) * fcd)
+
+    delta = b**2 - 4 * a * c
+
+    if delta < 0:
+        raise Exception('Dimensões da viga não válidas.')
+
+    raiz1 = (-b + math.sqrt(delta)) / (2 * a)
+    raiz2 = (-b - math.sqrt(delta)) / (2 * a)
+    return raiz1, raiz2
+
+
+def verifica_dominio(epslon):
+    '''
+    Verifica o domínio com base em um epslon
+    '''
+    if epslon < 0:
+        return '1'
+    elif 0 <= epslon <= 0.259:
+        return '2'
+    elif 0.259 < epslon <= 0.450:
+        return '3a'
+    elif 0.450 < epslon <= 0.628:
+        return '3b'
+    elif 0.628 < epslon <= 1:
+        return '4'
+    elif 1 < epslon:
+        return '5'
+    else:
+        raise Exception('Intervalo do domínio não definido.')
 
 
 # Dimensões da viga (Seção T) OBS: Verificar secao.png
-b1 = 0.80
-b2 = 0.80
-tw = 0.80
+# b1 = 14.6 / 3
+b1 = 1
+b2 = 0.6
+tw = 0.5
 
-d1 = 0.20
-d2 = 0.22
-d3 = 1.63
+d1 = 0.1
+d2 = 0.0
+d3 = 0
 d4 = 0
-d5 = 0
+d5 = 1.2
 
-d_linha = 0.03
-d = (d1 + d2 + d3 + d4 + d5) - d_linha
+d_linha = 0.07
+d = 1.1324999999999998
+# d = (d1 + d2 + d3 + d4 + d5) - d_linha
 
 # Concreto
-fck = 20e6
+bitola_agregado = (3 / 4) * 2.54e-2
+fck = 30e6
 fcd = fck / 1.4
 
 # Aço
-diametro_bitola = 22  # mm
+diametro_bitola = 25  # mm
 diametro_bitola_pele = 10  # mm
-diametro_estribo = 12.5  # mm
+diametro_estribo = 10  # mm
 fy = 500e6
 fyd = fy / 1.15
 
 # Carregamentos
-# Seção A-A
-# Momento negativo
-Mg = 1.35 * 2661.168e3
-Mq = 1.5 * 2808.184e3
-Md = Mg + Mq
-# Momento positivo
-# Mg = 1.35 * 0e3
-# Mq = 1.5 * 0e3
-# Md = Mg + Mq
+area = b1 * d1 + (tw + b1) * d2 / 2 + tw * d3 + (tw + b2) * d4 / 2 + d5 * b2
+p1 = area * 25
+p2 = 3 * 0.205 * 25
+comprimento_de_asfalto = None
+if b1 > 3:
+    if b1 - 3 <= 2.4:
+        comprimento_de_asfalto = b1 - 3
+    else:
+        raise Exception(f'Necessário contar divisão de concreto.')
+else:
+    comprimento_de_asfalto = 0
 
-# Seção B-B
-# Momento positivo
-# Mg = 1.35 * 1639.392e3
-# Mq = 1.5 * 3676.279e3
-# Md = Mg + Mq
+p3 = comprimento_de_asfalto * 0.1 * 24
+PP = p1 + p2 + p3 + 0.30 * (14.6 / 3) * 25
+print(f'Peso próprio = {PP} kN/m')
+# Momento Fletor
+Mg = (PP * 25.23**2 / 8) * 1e3
+Mq = 0e3
+Md = 1.35 * Mg + 1.5 * Mq
 
-# Seção B-B
-# Momento negativa
-# Mg = 1.35 * 0
-# Mq = 1.5 * 1445.278e3
-# Md = Mg + Mq
+# Esforço cortante
+Vsg = (PP * 25.23) * 1e3
+Vsq = 0e3
+Vsd = 1.35 * Vsg + 1.5 * Vsq
 
-
-# Cortante
-# Seção AA
-Vsg = 1.35 * 880.122e3
-Vsq = 1.5 * 1041.702e3
-Vsd = Vsg + Vsq
-
-
-# Seção BB
-# Vsg = 1.35 * 687.624e3
-# Vsq = 1.5 * 920.743e3
-# Vsd = Vsg + Vsq
-
-
-# sEÇÃO DOIDA
-# Vsg = 1.35 * 96.199e3
-# Vsq = 1.5 * 483.761e3
-# Vsd = Vsg + Vsq
-print(f'Md={Md}')
-
-# Equação x/d
-a = 0.4
-b = -1
-c = Md / (0.68 * b1 * (d**2) * fcd)
-
-delta = b**2 - 4 * a * c
-
-if delta < 0:
-    raise Exception('Dimensões da viga não válidas.')
-
-raiz1 = (-b + math.sqrt(delta)) / (2 * a)
-raiz2 = (-b - math.sqrt(delta)) / (2 * a)
-
-
+raiz1, raiz2 = calcular_epslon(Md, b1, d, fcd)
 epslon = min(raiz1, raiz2)
 x = epslon * d
 y = 0.8 * x
 
 if y > d1 and not (b1 == b2 == tw):
-    raise Exception('Linha neutra fora da mesa.')
+    Md1 = 0.85 * fcd * (b1 - tw) * d1 * (d - 0.5 * d1)
+    Md2 = Md - Md1
+    Md = Md2
+    raiz1, raiz2 = calcular_epslon(Md2, b1, d, fcd)
+    epslon = min(raiz1, raiz2)
+    x = epslon * d
+    y = 0.8 * x
 
-# Domínios
-dominio = None
-if epslon < 0:
-    dominio = 1
-elif 0 <= epslon <= 0.259:
-    dominio = 2
-elif 0.259 < epslon <= 0.450:
-    dominio = '3a'
-elif 0.450 < epslon <= 0.628:
-    dominio = '3b'
-elif 0.628 < epslon <= 1:
-    dominio = 4
-elif 1 < epslon:
-    dominio = 5
-else:
-    raise Exception('Intervalo do domínio não definido.')
+if epslon > 0.45:
+    print('\u001b[33m' + f'Necessita armadura dupla. O calculo não considera isso.' + '\u001b[0m')
 
+dominio = verifica_dominio(epslon)
 print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 
 # Area de aço
@@ -121,20 +126,19 @@ if As_min > As_calculado:
 
 area_bitola = math.pi * (diametro_bitola / 1e3)**2 / 4
 num_bitolas = arredonda_pra_cima(As / area_bitola)
-
 print(f'Area de aço calculado={As_calculado}; Area de aço min={As_min} -> {num_bitolas} Ø {diametro_bitola}mm')
 
 # Armadura de pele
 if d1 + d2 + d3 + d4 + d5 >= 0.6:
     As_pele = (0.1 / 100) * tw * (d1 + d2 + d3 + d4 + d5)
     area_bitola = math.pi * (diametro_bitola_pele / 1e3)**2 / 4
-    num_bitolas = arredonda_pra_cima(As_pele / area_bitola)
+    num_bitolas_pele = arredonda_pra_cima(As_pele / area_bitola)
 
-    print(f'Area de aço pele={As_pele} -> {num_bitolas} Ø {diametro_bitola_pele}mm')
+    print(f'Area de aço pele={As_pele} -> {num_bitolas_pele} Ø {diametro_bitola_pele}mm')
 
 # Verificação do esforço cortante
 alfa_v2 = 1 - (fck / 1e6) / 250
-Vrd2 = 0.27 * fcd * tw * d
+Vrd2 = 0.27 * alfa_v2 * fcd * tw * d
 if Vsd <= Vrd2:
     # Não ocorre ruptura das diagonais de compressão. (Vsd<Vrd2)
     # Resistência a compressão do concreto
@@ -173,6 +177,34 @@ if Vsd <= Vrd2:
         raise Exception('Ocorreu um erro no espaçamento de estribos.')
 
     print(f'Area de aço estribos={Asw}/m; Area de aço min={Asw_min}/m -> {num_estribos} Ø {diametro_estribo}mm')
-    print(f'Espaçamento máximo entre estribos={espacamento_max_estribos}')
+    # print(f'Espaçamento máximo entre estribos={espacamento_max_estribos}')
 else:
     raise Exception('Ocorre ruptura das diagonais de compressão.')
+
+espacamento_min_horizontal = max(1.2 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
+# print(f'Espacamento min horizontal={espacamento_min_horizontal}')
+
+espacamento_min_vertical = max(0.5 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
+# print(f'Espacamento min vertical={espacamento_min_vertical}')
+
+num_max_de_bitolas_por_camada = arredonda_pra_baixo(((b2 - d_linha * 2 - diametro_estribo * 2e-3) + espacamento_min_horizontal) / (diametro_bitola * 1e-3 + espacamento_min_horizontal))
+
+if num_bitolas <= num_max_de_bitolas_por_camada:
+    print(f'1 camada com {num_bitolas} Ø de {diametro_bitola}mm')
+    d_real = (d1 + d2 + d3 + d4 + d5 - d_linha - diametro_estribo * 1e-3 - diametro_bitola * 1e-3 / 2)
+    print(f'Diferença d_real e d utilizado = {math.fabs(d_real - d) * 100:.2f}%')
+else:
+    print(f'Precisa de mais de uma camada. 1 camada suporta apenas {num_max_de_bitolas_por_camada} Ø de {diametro_bitola}mm')
+    num_de_camadas = arredonda_pra_cima(num_bitolas / num_max_de_bitolas_por_camada)
+    print(f'Numero de camadas: {num_de_camadas}')
+    num_max_de_camadas = arredonda_pra_baixo(((d5 - diametro_estribo * 1e-3 - d_linha) + espacamento_min_vertical) / (diametro_bitola * 1e-3 + espacamento_min_vertical))
+    if num_de_camadas > num_max_de_camadas:
+        raise Exception(f'Não existe seção suficiente para a quantidade de bitolas.')
+    d_real = d1 + d2 + d3 + d4
+    d_real += d5 - d_linha - diametro_estribo * 1e-3 - (num_de_camadas * diametro_bitola * 1e-3 + (num_de_camadas - 1) * espacamento_min_vertical)  # Folga
+    d_real += (num_de_camadas * (diametro_bitola * 1e-3) + (num_de_camadas - 1) * espacamento_min_vertical) / 2  # Metade da area bitolas com espaçamento
+    if d_real != d:
+        print(f'd={d} d_real={d_real} {((d - d_real) / (d1 + d2 + d3 + d4 + d5)*100):.2f}% de diferença.')
+
+if (d - d_real) / (d1 + d2 + d3 + d4 + d5) > 0.1:
+    raise Exception(f'(d-d_real)/h > 10%')

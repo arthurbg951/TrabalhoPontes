@@ -1,1 +1,9 @@
+# Este arquivo mostra para o git quais pastas ou arquivos não devem
+# serem inclusas no versionamento
+
+# Pastas
 __pycache__
+Outras Equipes
+
+# Arquivos
+dados.py
