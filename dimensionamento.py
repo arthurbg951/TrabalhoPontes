@@ -54,7 +54,7 @@ Mq = 6647.4e3
 Md = 1.35 * Mg + 1.5 * Mq
 
 # Esforço cortante
-Vsg = (PP * L) * 1e3
+Vsg = (PP * L) * 1e3 / 2
 Vsq = 1083.9e3
 Vsd = 1.35 * Vsg + 1.5 * Vsq
 

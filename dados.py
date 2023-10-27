@@ -1,17 +1,19 @@
 # Dimensões da viga (Seção T) OBS: Verificar secao.png
 b1 = 2.92
-b2 = 1
-tw = 0.8
+b2 = 0.6
+tw = 0.6
 
 d1 = 0.2
 d2 = 0
-d3 = 0.5
+d3 = 0
 d4 = 0
-d5 = 0.4
-d_linha = 0.05
+d5 = 0.9
 
-d = 0.925
+d_linha = 0.04
+
+d = 0.8350000000000001
 # d = (d1 + d2 + d3 + d4 + d5) - d_linha
+
 
 # Concreto
 bitola_agregado = (3 / 4) * 2.54e-2
