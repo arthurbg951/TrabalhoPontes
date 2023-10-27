@@ -1,7 +1,7 @@
+from carregamentos import ppV1, ppV2, ppV3, ppV4, ppV5, ppV6
 import math
 from funcoes import arredonda_pra_cima, arredonda_pra_baixo
-from Secoes import GirderSection
-
+from dados import *
 
 def calcular_epslon(Md, b1, d, fcd):
     '''
@@ -41,58 +41,21 @@ def verifica_dominio(epslon):
         raise Exception('Intervalo do domínio não definido.')
 
 
-# Dimensões da viga (Seção T) OBS: Verificar secao.png
-# b1 = 14.6 / 3
-b1 = 1
-b2 = 0.6
-tw = 0.5
-
-d1 = 0.1
-d2 = 0.0
-d3 = 0.9
-d4 = 0
-d5 = 0.3
-
-d_linha = 0.07
-d = 1.1324999999999998
-# d = (d1 + d2 + d3 + d4 + d5) - d_linha
-
-# Concreto
-bitola_agregado = (3 / 4) * 2.54e-2
-fck = 30e6
-fcd = fck / 1.4
-
-# Aço
-diametro_bitola = 25  # mm
-diametro_bitola_pele = 10  # mm
-diametro_estribo = 10  # mm
-fy = 500e6
-fyd = fy / 1.15
+# Comprimento ponte
+L = 25
 
 # Carregamentos
-area = b1 * d1 + (tw + b1) * d2 / 2 + tw * d3 + (tw + b2) * d4 / 2 + d5 * b2
-p1 = area * 25
-p2 = 3 * 0.205 * 25
-comprimento_de_asfalto = None
-if b1 > 3:
-    if b1 - 3 <= 2.4:
-        comprimento_de_asfalto = b1 - 3
-    else:
-        raise Exception(f'Necessário contar divisão de concreto.')
-else:
-    comprimento_de_asfalto = 0
-
-p3 = comprimento_de_asfalto * 0.1 * 24
-PP = p1 + p2 + p3 + 0.30 * (14.6 / 3) * 25
+PP = ppV5
 print(f'Peso próprio = {PP} kN/m')
+
 # Momento Fletor
-Mg = (PP * 25.23**2 / 8) * 1e3
-Mq = 0e3
+Mg = (PP * L**2 / 8) * 1e3
+Mq = 6647.4e3
 Md = 1.35 * Mg + 1.5 * Mq
 
 # Esforço cortante
-Vsg = (PP * 25.23) * 1e3
-Vsq = 0e3
+Vsg = (PP * L) * 1e3
+Vsq = 1083.9e3
 Vsd = 1.35 * Vsg + 1.5 * Vsq
 
 raiz1, raiz2 = calcular_epslon(Md, b1, d, fcd)
@@ -159,9 +122,9 @@ if Vsd <= Vrd2:
     if Asw < Asw_min:
         Asw = Asw_min
 
-    area_estribo = math.pi * (diametro_estribo / 1e3)**2 / 4
+    area_estribo = num_ramos * math.pi * (diametro_estribo / 1e3)**2 / 4
     num_estribos = arredonda_pra_cima(Asw / area_estribo)
-    # Espaçamento de estribos
+    # Espaçamento de estribos - item 18.3.3.2 da NBR 6118 (2014)
     espacamento_max_estribos: float = None
     if Vsd <= 0.67 * Vrd2:
         if 0.6 * d >= 0.3:
@@ -177,9 +140,10 @@ if Vsd <= Vrd2:
         raise Exception('Ocorreu um erro no espaçamento de estribos.')
 
     print(f'Area de aço estribos={Asw}/m; Area de aço min={Asw_min}/m -> {num_estribos} Ø {diametro_estribo}mm')
+    print(f'Consumo esforço cortante = {Vsd/Vrd2 * 100:.2f}%')
     # print(f'Espaçamento máximo entre estribos={espacamento_max_estribos}')
 else:
-    raise Exception('Ocorre ruptura das diagonais de compressão.')
+    raise Exception(f'Ocorre ruptura das diagonais de compressão. Vsd/Vrd2={Vsd/Vrd2 * 100:.2f}%')
 
 espacamento_min_horizontal = max(1.2 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
 # print(f'Espacamento min horizontal={espacamento_min_horizontal}')
@@ -187,21 +151,31 @@ espacamento_min_horizontal = max(1.2 * bitola_agregado, 0.02, diametro_bitola * 
 espacamento_min_vertical = max(0.5 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
 # print(f'Espacamento min vertical={espacamento_min_vertical}')
 
-num_max_de_bitolas_por_camada = arredonda_pra_baixo(((b2 - d_linha * 2 - diametro_estribo * 2e-3) + espacamento_min_horizontal) / (diametro_bitola * 1e-3 + espacamento_min_horizontal))
+num_max_de_bitolas_por_camada = arredonda_pra_baixo(
+    ((b2 - d_linha * 2 - num_ramos * diametro_estribo * 2e-3) + espacamento_min_horizontal) /
+    (num_ramos * diametro_bitola * 1e-3 + espacamento_min_horizontal)
+)
 
 if num_bitolas <= num_max_de_bitolas_por_camada:
     print(f'1 camada com {num_bitolas} Ø de {diametro_bitola}mm')
     d_real = (d1 + d2 + d3 + d4 + d5 - d_linha - diametro_estribo * 1e-3 - diametro_bitola * 1e-3 / 2)
     print(f'Diferença d_real e d utilizado = {math.fabs(d_real - d) * 100:.2f}%')
 else:
-    print(f'Precisa de mais de uma camada. 1 camada suporta apenas {num_max_de_bitolas_por_camada} Ø de {diametro_bitola}mm')
+    print(f'Precisa de mais de uma camada. 1 camada suporta apenas {num_max_de_bitolas_por_camada} Ø de {diametro_bitola}mm c/ {espacamento_min_horizontal}')
     num_de_camadas = arredonda_pra_cima(num_bitolas / num_max_de_bitolas_por_camada)
     print(f'Numero de camadas: {num_de_camadas}')
-    num_max_de_camadas = arredonda_pra_baixo(((d5 - diametro_estribo * 1e-3 - d_linha) + espacamento_min_vertical) / (diametro_bitola * 1e-3 + espacamento_min_vertical))
+    num_max_de_camadas = arredonda_pra_baixo(
+        ((d5 - diametro_estribo * 1e-3 - d_linha) + espacamento_min_vertical) /
+        (diametro_bitola * 1e-3 + espacamento_min_vertical)
+    )
     if num_de_camadas > num_max_de_camadas:
         raise Exception(f'Não existe seção suficiente para a quantidade de bitolas.')
     d_real = d1 + d2 + d3 + d4
-    d_real += d5 - d_linha - diametro_estribo * 1e-3 - (num_de_camadas * diametro_bitola * 1e-3 + (num_de_camadas - 1) * espacamento_min_vertical)  # Folga
+    d_real += (
+        d5 - d_linha - diametro_estribo * 1e-3 -
+        (num_de_camadas * diametro_bitola * 1e-3 +
+         (num_de_camadas - 1) * espacamento_min_vertical)
+    )  # Folga
     d_real += (num_de_camadas * (diametro_bitola * 1e-3) + (num_de_camadas - 1) * espacamento_min_vertical) / 2  # Metade da area bitolas com espaçamento
     if d_real != d:
         print(f'd={d} d_real={d_real} {((d - d_real) / (d1 + d2 + d3 + d4 + d5)*100):.2f}% de diferença.')

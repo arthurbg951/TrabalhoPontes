@@ -79,3 +79,9 @@ print(f'#####################')
 if __name__ == '__main__':
     fator_de_impacto = CIA('concreto') * CNF(2) * CIV(20)
     print(f'Fator de impacto calculado: {fator_de_impacto:.3f}')
+
+    fator_de_impacto = CIA('concreto') * CNF(2) * CIV(25.23)
+    print(f'Fator de impacto calculado trabalho final: {fator_de_impacto:.3f}')
+
+    fator_de_impacto = CIA('concreto') * CNF(2) * CIV(25)
+    print(f'Fator de impacto calculado TCC: {fator_de_impacto:.3f}')
