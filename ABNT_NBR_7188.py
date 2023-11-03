@@ -1,4 +1,4 @@
-print(f'### ABNT NBR 7188 ###')
+
 '''5 Ações em pontes e viadutos'''
 '''
 5.1 Cargas móveis
@@ -23,8 +23,6 @@ def get_q(p: float, CIV: float, CNF: float, CIA: float) -> float:
 
 P = 75
 p = 5
-print(f'P: {P} kN')
-print(f'p: {p} kN')
 '''
 5.1.1 Cargas nos passeios
 Nos passeios para pedestres das pontes e viadutos, adotar carga uniformemente distribuída
@@ -32,8 +30,6 @@ de 3 kN/m² na posição mais desfavorável concomitante com a carga móvel rodo
 e dimensionamentos dos diversos elementos estruturais, assim como para verificações globais.
 '''
 q_passeio = 3
-print(f'Carga no passeio: {q_passeio} kN')
-
 
 '''
 5.1.2 Coeficientes de ponderação de cargas verticais
@@ -74,9 +70,14 @@ def CIA(tipo_estrutura: str) -> float:
         raise Exception('O tipo da estrutura definido em norma é apenas concreto,mista ou aço.')
 
 
-print(f'#####################')
-
 if __name__ == '__main__':
+
+    print(f'### ABNT NBR 7188 ###')
+    print(f'P: {P} kN')
+    print(f'p: {p} kN')
+    print(f'Carga no passeio: {q_passeio} kN')
+    print(f'#####################')
+
     fator_de_impacto = CIA('concreto') * CNF(2) * CIV(20)
     print(f'Fator de impacto calculado: {fator_de_impacto:.3f}')
 
@@ -85,3 +86,9 @@ if __name__ == '__main__':
 
     fator_de_impacto = CIA('concreto') * CNF(2) * CIV(25)
     print(f'Fator de impacto calculado TCC: {fator_de_impacto:.3f}')
+
+    cia = CIA('concreto')
+    cnf = CNF(4)
+    civ = CIV(39)
+    fator_de_impacto = cia * cnf * civ
+    print(f'Fator de impacto calculado Trabalho Extra: {fator_de_impacto:.3f}, CIA={cia} CNF={cnf} CIV={civ:.3f}')

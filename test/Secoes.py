@@ -64,3 +64,7 @@ class PotatoSection(ISection):
 
     def inercia() -> float:
         raise NotImplemented
+
+
+if __name__ == '__main__':
+    secao_t = TSection(b=2.92, d=1.1, tw=0.6, tf=0.2)

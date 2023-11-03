@@ -1,11 +1,16 @@
 from carregamentos import ppV1, ppV2, ppV3, ppV4, ppV5, ppV6
 import math
 from funcoes import arredonda_pra_cima, arredonda_pra_baixo
+from funcoes import (
+    to_red as r,
+    to_yellow as y
+)
 from dados import *
 
-def calcular_epslon(Md, b1, d, fcd):
+
+def calcular_epslon(Md: float, b1: float, d: float, fcd: float) -> tuple[float, float]:
     '''
-    Equação que retorna x/d
+    Equação que retorna epslon (x/d).
     '''
     a = 0.4
     b = -1
@@ -21,9 +26,9 @@ def calcular_epslon(Md, b1, d, fcd):
     return raiz1, raiz2
 
 
-def verifica_dominio(epslon):
+def verifica_dominio(epslon: float) -> str:
     '''
-    Verifica o domínio com base em um epslon
+    Verifica o domínio com base em um epslon (x/d).
     '''
     if epslon < 0:
         return '1'
@@ -50,12 +55,12 @@ print(f'Peso próprio = {PP} kN/m')
 
 # Momento Fletor
 Mg = (PP * L**2 / 8) * 1e3
-Mq = 6647.4e3
+Mq = 2080.9e3
 Md = 1.35 * Mg + 1.5 * Mq
 
 # Esforço cortante
 Vsg = (PP * L) * 1e3 / 2
-Vsq = 1083.9e3
+Vsq = 347.8e3
 Vsd = 1.35 * Vsg + 1.5 * Vsq
 
 raiz1, raiz2 = calcular_epslon(Md, b1, d, fcd)
@@ -73,7 +78,7 @@ if y > d1 and not (b1 == b2 == tw):
     y = 0.8 * x
 
 if epslon > 0.45:
-    print('\u001b[33m' + f'Necessita armadura dupla. O calculo não considera isso.' + '\u001b[0m')
+    print(y(f'Necessita armadura dupla. O calculo não considera isso.'))
 
 dominio = verifica_dominio(epslon)
 print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
@@ -137,13 +142,13 @@ if Vsd <= Vrd2:
         else:
             espacamento_max_estribos = 0.3 * d
     else:
-        raise Exception('Ocorreu um erro no espaçamento de estribos.')
+        raise Exception(r('Ocorreu um erro no espaçamento de estribos.'))
 
     print(f'Area de aço estribos={Asw}/m; Area de aço min={Asw_min}/m -> {num_estribos} Ø {diametro_estribo}mm')
     print(f'Consumo esforço cortante = {Vsd/Vrd2 * 100:.2f}%')
     # print(f'Espaçamento máximo entre estribos={espacamento_max_estribos}')
 else:
-    raise Exception(f'Ocorre ruptura das diagonais de compressão. Vsd/Vrd2={Vsd/Vrd2 * 100:.2f}%')
+    raise Exception(r(f'Ocorre ruptura das diagonais de compressão. Vsd/Vrd2={Vsd/Vrd2 * 100:.2f}%'))
 
 espacamento_min_horizontal = max(1.2 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
 # print(f'Espacamento min horizontal={espacamento_min_horizontal}')
@@ -173,8 +178,7 @@ else:
     d_real = d1 + d2 + d3 + d4
     d_real += (
         d5 - d_linha - diametro_estribo * 1e-3 -
-        (num_de_camadas * diametro_bitola * 1e-3 +
-         (num_de_camadas - 1) * espacamento_min_vertical)
+        (num_de_camadas * diametro_bitola * 1e-3 + (num_de_camadas - 1) * espacamento_min_vertical)
     )  # Folga
     d_real += (num_de_camadas * (diametro_bitola * 1e-3) + (num_de_camadas - 1) * espacamento_min_vertical) / 2  # Metade da area bitolas com espaçamento
     if d_real != d:
