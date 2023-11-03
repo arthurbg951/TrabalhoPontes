@@ -1,5 +1,7 @@
+from typing import Union
 from abc import abstractmethod
 from numpy.linalg import det
+from numpy import array, ones
 
 class ISection:
     @abstractmethod
@@ -56,15 +58,22 @@ class TSection(ISection):
 
 
 class PotatoSection(ISection):
-    def __init__(self, *pontos: tuple) -> None:
+    def __init__(self, *pontos: Union[tuple, list]) -> None:
         self.pontos = list(pontos)
 
     def area(self) -> float:
-        return det(self.pontos) / 2
+        n = len(self.pontos)
+        matriz = ones((n, n))
+        for i, (x, y) in enumerate(self.pontos):
+            matriz[i, 0] = x
+            matriz[i, 1] = y
+        return det(matriz) / 2
 
-    def inercia() -> float:
+    def inercia(self) -> float:
         raise NotImplemented
 
 
 if __name__ == '__main__':
     secao_t = TSection(b=2.92, d=1.1, tw=0.6, tf=0.2)
+    potato = PotatoSection((0, 0), (1, 0), (2, 2))
+    print(potato.area())
