@@ -1,7 +1,9 @@
 from ABNT_NBR_7188 import P, p, CNF, CIA, CIV
 from dados import b1, b2, tw, d1, d2, d3, d4, d5
 
-# Entrada de dados:
+'''
+  Entrada de dados:
+'''
 # Trem tipo intermediário
 distancia_1o_vao = b1
 distancia_2o_vao = b1
@@ -15,67 +17,63 @@ peso_especifico_pavimento = 24  # kN/m³
 
 # AREAS DO PROJETO CAD
 # Longarina
-area_secao_intermediaria = (
+area_secao_longarina = (
     b1 * d1 +
     (tw + b1) * d2 / 2 +
     tw * d3 + (tw + b2) * d4 / 2 +
     d5 * b2
 )
-area_secao_canto = (
-    tw * (d1 + d2 + d3 + d4 + d5) +
-    ((d1 + d2) + d1) * (b1 - tw) / 2 +
-    ((d4 + d5) + d5) * (b2 - tw) / 2
-)
 
 # Guarda_roda
 area_guarda_roda = 0.218  # m²
 
+# Guarda_corpo
+q_guarda_corpo = 0.157  # kN/m
+
 # Transversinas
-area_tranversina_pilar = 0.7 * 0.35  # altura x base
-area_tranversina_vao = 0  # altura x base
-comprimento_transversina_pilar = 2.92  # m
-comprimento_metade_transversina_vao = 0  # m
+area_septo_pilar = 0.7 * 0.35  # altura x base
+comprimento_septo_pilar = b1  # m
 
 # Recapeamento
 q_recapeamento = 2  # kN/m²
 
 # Comprimentos adotados
-espessura_de_asfalto = 0.1  # m
-altura_passeio = 0.205  # m
+espessura_de_asfalto = 0.04  # m
+altura_passeio = 0.04  # m
 
 # CARREGAMENTOS FTOOL
 # Distribuído
-ppV1 = area_secao_canto * peso_especifico_concreto
-ppV1 += (comprimento_transversina_pilar / 2) * altura_passeio * peso_especifico_concreto
+ppV1 = area_secao_longarina * peso_especifico_concreto
+ppV1 += q_guarda_corpo
+ppV1 += 2 * 0.04 * peso_especifico_pavimento
+ppV1 += 2 * q_recapeamento
 ppV1 += area_guarda_roda * peso_especifico_concreto
 
-ppV2 = area_secao_intermediaria * peso_especifico_concreto
-ppV2 += 1.04 * altura_passeio * peso_especifico_concreto
-ppV2 += (0.42 + comprimento_transversina_pilar / 2) * espessura_de_asfalto * peso_especifico_pavimento
-ppV2 += (0.42 + comprimento_transversina_pilar / 2) * q_recapeamento
+ppV2 = area_secao_longarina * peso_especifico_concreto
+ppV2 += 2.36 * 0.04 * peso_especifico_pavimento
+ppV2 += 2.36 * q_recapeamento
 
-ppV3 = area_secao_intermediaria * peso_especifico_concreto
-ppV3 += comprimento_transversina_pilar * espessura_de_asfalto * peso_especifico_pavimento
-ppV3 += comprimento_transversina_pilar * q_recapeamento
+ppV3 = area_secao_longarina * peso_especifico_concreto
+ppV3 += b1 * 0.04 * peso_especifico_pavimento
+ppV3 += b1 * q_recapeamento
 
-ppV4 = area_secao_intermediaria * peso_especifico_concreto
-ppV4 += 0.3 * altura_passeio * peso_especifico_concreto
-ppV4 += 1.02 * espessura_de_asfalto * peso_especifico_pavimento
-ppV4 += 1.02 * q_recapeamento
-ppV4 += ((comprimento_transversina_pilar / 2) + 0.14) * espessura_de_asfalto * peso_especifico_pavimento
-ppV4 += ((comprimento_transversina_pilar / 2) + 0.14) * q_recapeamento
+ppV4 = area_secao_longarina * peso_especifico_concreto
+ppV4 += area_guarda_roda * peso_especifico_concreto
+ppV4 += (b1 - 0.4) * 0.04 * peso_especifico_pavimento
+ppV4 += (b1 - 0.4) * q_recapeamento
 
-ppV5 = area_secao_intermediaria * peso_especifico_concreto
-ppV5 += 1.38 * espessura_de_asfalto * peso_especifico_pavimento
-ppV5 += 1.38 * q_recapeamento
-ppV5 += ((comprimento_transversina_pilar / 2) + 0.08) * altura_passeio * peso_especifico_concreto
+ppV5 = area_secao_longarina * peso_especifico_concreto
+ppV5 += q_guarda_corpo
+ppV5 += (b1 - 0.1) * 0.04 * peso_especifico_pavimento
+ppV5 += (b1 - 0.1) * q_recapeamento
 
-ppV6 = area_secao_canto * peso_especifico_concreto
-ppV6 += (comprimento_transversina_pilar / 2) * altura_passeio * peso_especifico_concreto
-ppV6 += area_guarda_roda * peso_especifico_concreto
+ppV6 = area_secao_longarina * peso_especifico_concreto
+ppV6 += q_guarda_corpo
+ppV6 += (b1 - 0.1) * 0.04 * peso_especifico_pavimento
+ppV6 += (b1 - 0.1) * q_recapeamento
 
 # Concentrado
-concentrada = area_tranversina_pilar * comprimento_transversina_pilar * peso_especifico_concreto
+concentrada = area_septo_pilar * comprimento_septo_pilar * peso_especifico_concreto
 
 # Fator de impacto
 fator_de_impacto = CNF(2) * CIA('concreto') * CIV(20)

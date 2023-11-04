@@ -2,8 +2,8 @@ from carregamentos import ppV1, ppV2, ppV3, ppV4, ppV5, ppV6
 import math
 from funcoes import arredonda_pra_cima, arredonda_pra_baixo
 from funcoes import (
-    to_red as r,
-    to_yellow as y
+    to_red as re,
+    to_yellow as ye
 )
 from dados import *
 
@@ -50,17 +50,17 @@ def verifica_dominio(epslon: float) -> str:
 L = 25
 
 # Carregamentos
-PP = ppV5
+PP = max(ppV1, ppV2, ppV3, ppV4, ppV5, ppV6)
 print(f'Peso próprio = {PP} kN/m')
 
 # Momento Fletor
 Mg = (PP * L**2 / 8) * 1e3
-Mq = 2080.9e3
+Mq = 3443.9e3
 Md = 1.35 * Mg + 1.5 * Mq
 
 # Esforço cortante
 Vsg = (PP * L) * 1e3 / 2
-Vsq = 347.8e3
+Vsq = 571.1e3
 Vsd = 1.35 * Vsg + 1.5 * Vsq
 
 raiz1, raiz2 = calcular_epslon(Md, b1, d, fcd)
@@ -142,13 +142,13 @@ if Vsd <= Vrd2:
         else:
             espacamento_max_estribos = 0.3 * d
     else:
-        raise Exception(r('Ocorreu um erro no espaçamento de estribos.'))
+        raise Exception(re('Ocorreu um erro no espaçamento de estribos.'))
 
     print(f'Area de aço estribos={Asw}/m; Area de aço min={Asw_min}/m -> {num_estribos} Ø {diametro_estribo}mm')
     print(f'Consumo esforço cortante = {Vsd/Vrd2 * 100:.2f}%')
     # print(f'Espaçamento máximo entre estribos={espacamento_max_estribos}')
 else:
-    raise Exception(r(f'Ocorre ruptura das diagonais de compressão. Vsd/Vrd2={Vsd/Vrd2 * 100:.2f}%'))
+    raise Exception(re(f'Ocorre ruptura das diagonais de compressão. Vsd/Vrd2={Vsd/Vrd2 * 100:.2f}%'))
 
 espacamento_min_horizontal = max(1.2 * bitola_agregado, 0.02, diametro_bitola * 1e-3)
 # print(f'Espacamento min horizontal={espacamento_min_horizontal}')
@@ -158,7 +158,7 @@ espacamento_min_vertical = max(0.5 * bitola_agregado, 0.02, diametro_bitola * 1e
 
 num_max_de_bitolas_por_camada = arredonda_pra_baixo(
     ((b2 - d_linha * 2 - num_ramos * diametro_estribo * 2e-3) + espacamento_min_horizontal) /
-    (num_ramos * diametro_bitola * 1e-3 + espacamento_min_horizontal)
+    (diametro_bitola * 1e-3 + espacamento_min_horizontal)
 )
 
 if num_bitolas <= num_max_de_bitolas_por_camada:
