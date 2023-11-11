@@ -1,6 +1,20 @@
-from dados import b1, b2, tw, d1, d2, d3, d4, d5, d_linha
+from dimensionamento2 import dados
 import ezdxf
 import os
+
+# Seção Girder
+data = dados()
+secao = data['girder']
+
+b1 = secao.b1
+b2 = secao.b2
+tw = secao.tw
+
+d1 = secao.d1
+d2 = secao.d2
+d3 = secao.d3
+d4 = secao.d4
+d5 = secao.d5
 
 # Defina manualmente os pontos x e y para as retas
 pontos = [

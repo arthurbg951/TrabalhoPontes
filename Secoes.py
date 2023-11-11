@@ -22,7 +22,11 @@ class ISection:
 class GirderSection(ISection):
     def __init__(self, b1, b2, tw, d1, d2, d3, d4, d5) -> None:
         self.b1 = b1
-        self.b2 = b2
+        if tw >= b2:
+            print(f'Seção Modificada. b2 recebeu tw pois b2<tw.')
+            self.b2 = tw
+        else:
+            self.b2 = b2
         self.tw = tw
         self.d1 = d1
         self.d2 = d2

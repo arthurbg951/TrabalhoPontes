@@ -56,9 +56,6 @@ def fyd(fy: float) -> float:
 def area_bitola(bitola: float) -> float:
     return math.pi * bitola**2 / 4
 
-def As(Md: float, fyd: float, d: float, x: float) -> float:
-    return Md / (fyd * (d - 0.4 * x))
-
 def As_min(taxa_de_armadura: float, tw: float, d: float, d_linha: float) -> float:
     return taxa_de_armadura * tw * (d + d_linha)
 
@@ -141,7 +138,6 @@ def dimensionar_armadura_longitudinal(
     diametro_bitola,
     fck,
     fy,
-    # mostrar_processamento: bool = False
 ):
     Md = 1.35 * Mg + 1.5 * Mq
 
@@ -151,8 +147,9 @@ def dimensionar_armadura_longitudinal(
     x = epslon * d
     y = 0.8 * x
 
-    if y > secao.d1 and not (secao.b1 == secao.b2 == secao.tw):
-        Md1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * secao.d1 * (d - 0.5 * secao.d1)
+    is_retangular_section = (secao.b1 == secao.b2 == secao.tw)
+    Md1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * secao.d1 * (d - 0.5 * secao.d1)
+    if y > secao.d1 and not is_retangular_section:
         Md2 = Md - Md1
         Md = Md2
         raiz1, raiz2 = calcular_epslon(Md2, secao.b1, d, fcd_calc)
@@ -160,17 +157,41 @@ def dimensionar_armadura_longitudinal(
         x = epslon * d
         y = 0.8 * x
 
-    if epslon > 0.45:
-        print(ye(f'Necessita armadura dupla. O calculo não considera isso.'))
-
     dominio = verifica_dominio(epslon)
 
-    As_calculado = As(Md, fyd(fy), d, x)
+    As1 = 0.85 * fcd_calc * (girder.b1 - girder.tw) * girder.d1 / fyd(fy)
+    As2 = 0.68 * girder.b1 * d * epslon * fcd_calc / fyd(fy)
+    # formula vista em sala
+    # As2 = Md / (fyd * (d - 0.4 * x))  # Area de aço calculado
+    As_calculado = As2
+    if epslon <= 0.45:
+        # Se a linha neutra passar da mesa
+        if y > girder.d1 and not is_retangular_section:
+            As_calculado += As1
+
+    elif epslon > 0.45:
+        print(ye(f"Necessita de armadura dupla."))
+        print(ye(f'Verificar diferença do d". O cálculo não foi automatizado para isso.'))
+        d_duas_linhas = cobrimento  # necessário verificar a porcentagem de diferença
+        As_linha1 = Md - 0.68 * girder.b1 * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45) / (fyd(fy) * (d - d_duas_linhas))
+
+        # Caso 1: linha neutra dentro da mesa
+        if y <= girder.d1:
+            As_calculado += As_linha1
+        # Caso 2: linha neutra fora da mesa
+        elif y > girder.d1:
+            Md2 = 0.68 * girder.tw * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45)
+            Md_linha = Md - Md1 - Md2
+            As_linha2 = Md_linha / (fyd(fy) * (d - d_duas_linhas))
+            As_calculado += As1 + As_linha2
+
     aco_minimo = As_min(taxa_minima_armadura(fck / 1e6), secao.tw, d, cobrimento)
+
     if As_calculado < aco_minimo:
         As_adotado = aco_minimo
     else:
         As_adotado = As_calculado
+
     num_bitolas = arredonda_pra_cima(As_adotado / area_bitola(diametro_bitola))
 
     return epslon, x, y, dominio, As_adotado, num_bitolas
@@ -276,6 +297,7 @@ def espacamento_armadura_longitudinal(
         )  # Folga
         d_real += (num_de_camadas * (diametro_bitola) + (num_de_camadas - 1) * espacamento_min_vertical) / 2  # Metade da area bitolas com espaçamento
 
+    # Condição de até no max 10% de diferença
     if (d - d_real) / (secao.d1 + secao.d2 + secao.d3 + secao.d4 + secao.d5) > 0.1:
         raise Exception(re(f'(d-d_real)/h > 10%'))
 
@@ -423,9 +445,9 @@ def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_b
         print()
 
 
-if __name__ == '__main__':
+def dados():
     # Seção Girder
-    gider = GirderSection(
+    girder = GirderSection(
         b1=2.43,
         b2=0.8,
         tw=0.4,
@@ -441,7 +463,7 @@ if __name__ == '__main__':
     L = 25
 
     # Peso próprio das vigas
-    PP = max(*calcula_pp(gider.b1, gider.b2, gider.tw, gider.d1, gider.d2, gider.d3, gider.d4, gider.d5))
+    PP = max(*calcula_pp(girder.b1, girder.b2, girder.tw, girder.d1, girder.d2, girder.d3, girder.d4, girder.d5))
 
     # Solicitações
     Mg = (PP * L**2 / 8) * 1e3
@@ -465,8 +487,75 @@ if __name__ == '__main__':
 
     num_ramos = 2
 
-    print(ye(f'Hipótese 1:'))
-    main(gider, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos)
+    data = {
+        'girder': girder,
+        'L': L,
+        'PP': PP,
+        'Mg': Mg,
+        'Mq': Mq,
+        'Vsg': Vsg,
+        'Vsq': Vsq,
+        'fck': fck,
+        'fy': fy,
+        'cobrimento': cobrimento,
+        'diametro_bitola': diametro_bitola,
+        'diametro_bitola_pele': diametro_bitola_pele,
+        'diametro_estribo': diametro_estribo,
+        'bitola_agregado': bitola_agregado,
+        'num_ramos': num_ramos
+    }
 
-    # print(ye(f'Hipótese 2:'))
-    # main(gider, 0, 0, 0, 0, fck, fy, cobrimento, 6.3 * 1e-3, 6.3 * 1e-3, 6.3 * 1e-3, bitola_agregado, 1)
+    return data
+
+
+if __name__ == '__main__':
+
+    data = dados()
+
+    girder = data['girder']
+    Mg = data['Mg']
+    Mq = data['Mq']
+    Vsg = data['Vsg']
+    Vsq = data['Vsq']
+    fck = data['fck']
+    fy = data['fy']
+    cobrimento = data['cobrimento']
+    diametro_bitola = data['diametro_bitola']
+    diametro_bitola_pele = data['diametro_bitola_pele']
+    diametro_estribo = data['diametro_estribo']
+    bitola_agregado = data['bitola_agregado']
+    num_ramos = data['num_ramos']
+
+    print(ye(f'Hipótese 1:'))
+    main(girder, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos)
+
+    girder = GirderSection(
+        # b1=1.07893,
+        b1=1.079,
+        b2=0.5,
+        tw=0.2,
+
+        d1=0.2,
+        d2=0,
+        d3=0.5,
+        d4=0,
+        d5=0.5,
+    )
+
+    print(ye(f'Hipótese 2:'))
+    main(girder, 6_000e3, 0, 0, 0, fck, fy, cobrimento, 25 * 1e-3, 6.3 * 1e-3, 6.3 * 1e-3, bitola_agregado, 1)
+
+    girder = GirderSection(
+        b1=0.5,
+        b2=0.5,
+        tw=0.5,
+
+        d1=0,
+        d2=0,
+        d3=0,
+        d4=0,
+        d5=0.5,
+    )
+
+    print(ye(f'Hipótese 3:'))
+    main(girder, 500e3, 0, 0, 0, fck, fy, cobrimento, 40 * 1e-3, 6.3 * 1e-3, 6.3 * 1e-3, bitola_agregado, 1)

@@ -1,16 +1,19 @@
 import matplotlib.pyplot as plt
-from dados import b1, b2, tw, d1, d2, d3, d4, d5
+from dimensionamento2 import dados
 
 # Seção Girder
-# b1 = 1
-# b2 = 0.6
-# tw = 0.5
+data = dados()
+secao = data['girder']
 
-# d1 = 0.1
-# d2 = 0.0
-# d3 = 0.9
-# d4 = 0
-# d5 = 0.3
+b1 = secao.b1
+b2 = secao.b2
+tw = secao.tw
+
+d1 = secao.d1
+d2 = secao.d2
+d3 = secao.d3
+d4 = secao.d4
+d5 = secao.d5
 
 # Defina manualmente os pontos x e y para as retas
 x1 = [-b2 / 2, b2 / 2]
