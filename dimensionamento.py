@@ -45,15 +45,15 @@ def verifica_dominio(epslon: float) -> str:
         raise Exception('Intervalo do domínio não definido.')
 
 # Dimensões da viga (Seção T) OBS: Verificar secao.png
-b1 = 2.43
-b2 = 0.8
-tw = 0.4
+b1=1
+b2=0.2
+tw=0.2
 
-d1 = 0.2
-d2 = 0
-d3 = 0.4
-d4 = 0
-d5 = 0.2
+d1=0.2
+d2=0
+d3=0.4
+d4=0
+d5=0.2
 
 d_linha = 0.04
 
@@ -63,14 +63,14 @@ d = (d1 + d2 + d3 + d4 + d5) - d_linha
 
 # Concreto
 bitola_agregado = (3 / 4) * 2.54e-2
-fck = 30e6
+fck = 20e6
 fcd = fck / 1.4
 
 # Aço
-diametro_bitola = 25  # mm
-diametro_bitola_pele = 10  # mm
-diametro_estribo = 10  # mm
-num_ramos = 2
+diametro_bitola = 40  # mm
+diametro_bitola_pele = 6.3  # mm
+diametro_estribo = 6.3  # mm
+num_ramos = 1
 fy = 500e6
 fyd = fy / 1.15
 
@@ -82,14 +82,20 @@ PP = max(*calcula_pp(b1, b2, tw, d1, d2, d3, d4, d5))
 print(f'Peso próprio = {PP} kN/m')
 
 # Momento Fletor
-Mg = (PP * L**2 / 8) * 1e3
-Mq = 3443.9e3
-Md = 1.35 * Mg + 1.5 * Mq
+# Mg = (PP * L**2 / 8) * 1e3
+# Mq = 3443.9e3
+# Md = 1.35 * Mg + 1.5 * Mq
+MPP = PP * 14.6**2 / 8 # Nm
+MR = 5815.4e3 # Nm
+Md = 7e3 # Nm
 
 # Esforço cortante
-Vsg = (PP * L) * 1e3 / 2
-Vsq = 571.1e3
-Vsd = 1.35 * Vsg + 1.5 * Vsq
+# Vsg = (PP * L) * 1e3 / 2
+# Vsq = 571.1e3
+# Vsd = 1.35 * Vsg + 1.5 * Vsq
+VPP = (PP * 14.6) * 1e3 / 2 # Nm
+VR = 1594e3 # N
+Vsd = 8.4e3 # N
 
 raiz1, raiz2 = calcular_epslon(Md, b1, d, fcd)
 epslon = min(raiz1, raiz2)
@@ -114,7 +120,7 @@ print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
 # Area de aço
 As_calculado = Md / (fyd * (d - 0.4 * x))
 As = As_calculado
-taxa_armadura = 0.208 / 100
+taxa_armadura = 0.150 / 100
 As_min = taxa_armadura * tw * (d + d_linha)
 
 if As_min > As_calculado:

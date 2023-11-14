@@ -1,18 +1,18 @@
 from typing import Union
 from abc import abstractmethod
 from numpy.linalg import det
-from numpy import array, ones
+from numpy import array, ones, pi
 
 class ISection:
     @abstractmethod
-    def area() -> float:
+    def area(self) -> float:
         '''
         Retorna a área da seção.
         '''
         ...
 
     @abstractmethod
-    def inercia() -> float:
+    def inercia(self) -> float:
         '''
         Retorna o momento de inercia da seção.
         '''
@@ -22,7 +22,7 @@ class ISection:
 class GirderSection(ISection):
     def __init__(self, b1, b2, tw, d1, d2, d3, d4, d5) -> None:
         self.b1 = b1
-        if tw >= b2:
+        if tw > b2:
             print(f'Seção Modificada. b2 recebeu tw pois b2<tw.')
             self.b2 = tw
         else:
@@ -75,6 +75,20 @@ class PotatoSection(ISection):
 
     def inercia(self) -> float:
         raise NotImplemented
+
+
+class CircularSection(ISection):
+    def __init__(self, raio) -> None:
+        self.raio = raio
+
+    def pilar_equivalente(self):
+        return (self.inercia() * 12)**0.25
+
+    def area(self) -> float:
+        return pi * self.raio**2
+
+    def inercia(self) -> float:
+        return pi * self.raio**4 / 4
 
 
 if __name__ == '__main__':

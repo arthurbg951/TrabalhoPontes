@@ -142,7 +142,13 @@ def show_section(b1, b2, tw, d1, d2, d3, d4, d5):
 
     # Exiba o gráfico
     plt.show()
-    
+
+
+def interpolar(sup1, inf1, sup2, inf2, valor):
+    delta1 = sup1 - inf1
+    delta2 = sup2 - inf2
+    return (valor - inf1) / (delta1 / delta2) + inf2
+
 # ANSI code colors python
 # Converte um texto para a cor definida
 

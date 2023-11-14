@@ -133,68 +133,86 @@ def dimensionar_armadura_longitudinal(
     secao: GirderSection,
     d,
     cobrimento,
-    Mg,
-    Mq,
+    Md,
     diametro_bitola,
     fck,
     fy,
 ):
-    Md = 1.35 * Mg + 1.5 * Mq
-
+    
+    variavel_base = secao.d1
+    is_retangular_section = (secao.b1 == secao.b2 == secao.tw)
+    if is_retangular_section:
+        variavel_base = secao.d5
+    
+    # Passo 1: Cálcular como se fosse viga retangular
     fcd_calc = fcd(fck)
     raiz1, raiz2 = calcular_epslon(Md, secao.b1, d, fcd_calc)
     epslon = min(raiz1, raiz2)
     x = epslon * d
     y = 0.8 * x
-
-    is_retangular_section = (secao.b1 == secao.b2 == secao.tw)
-    Md1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * secao.d1 * (d - 0.5 * secao.d1)
-    if y > secao.d1 and not is_retangular_section:
-        Md2 = Md - Md1
-        Md = Md2
-        raiz1, raiz2 = calcular_epslon(Md2, secao.b1, d, fcd_calc)
-        epslon = min(raiz1, raiz2)
-        x = epslon * d
-        y = 0.8 * x
-
     dominio = verifica_dominio(epslon)
 
-    As1 = 0.85 * fcd_calc * (girder.b1 - girder.tw) * girder.d1 / fyd(fy)
-    As2 = 0.68 * girder.b1 * d * epslon * fcd_calc / fyd(fy)
-    # formula vista em sala
-    # As2 = Md / (fyd * (d - 0.4 * x))  # Area de aço calculado
-    As_calculado = As2
-    if epslon <= 0.45:
-        # Se a linha neutra passar da mesa
-        if y > girder.d1 and not is_retangular_section:
-            As_calculado += As1
+    # Passo 2: Corrigir parametro de ductibilidade (epslon)
+    if y > variavel_base:
+        # Md1: Parcela do momento fletor resistido pela mesa
+        Md1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * variavel_base * (d - 0.5 * variavel_base)
+        # Md2: Parcela do momento fletor resistido pela alma
+        Md2 = Md - Md1
+        raiz1, raiz2 = calcular_epslon(Md2, secao.tw, d, fcd_calc)
+        epslon_corrigido = min(raiz1, raiz2)
+        # x_corrigido = epslon * d
+        # y_corrigido = 0.8 * x
+        dominio = verifica_dominio(epslon_corrigido)
 
+    y_lim = 0.8 * 0.45 * d
+
+    # Passo 3: Verificar os casos
+    fyd_calc = fyd(fy)
+
+    if epslon <= 0.45:
+        # Caso a) y<=bf e epslon<0.45
+        # Se a linha neutra abaixo da mesa
+        if y <= variavel_base:
+            As = 0.68 * secao.b1 * d * epslon * fcd_calc / fyd_calc
+            As_calculado = As
+        # Caso b) y>bf e epslon<0.45
+        # Se a linha neutra passar da mesa
+        if y > variavel_base:
+            As1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * variavel_base / fyd_calc
+            As2 = 0.68 * secao.tw * d * epslon_corrigido * fcd_calc / fyd_calc
+            As_calculado = As1 + As2
     elif epslon > 0.45:
         print(ye(f"Necessita de armadura dupla."))
         print(ye(f'Verificar diferença do d". O cálculo não foi automatizado para isso.'))
         d_duas_linhas = cobrimento  # necessário verificar a porcentagem de diferença
-        As_linha1 = Md - 0.68 * girder.b1 * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45) / (fyd(fy) * (d - d_duas_linhas))
-
         # Caso 1: linha neutra dentro da mesa
-        if y <= girder.d1:
-            As_calculado += As_linha1
+        if y_lim <= variavel_base:
+            As_linha = (Md - 0.68 * secao.b1 * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45)) / (fyd_calc * (d - d_duas_linhas))
+            As = 0.68 * secao.b1 * d * 0.45 * fcd_calc / fyd_calc + As_linha
+            As_calculado = As
         # Caso 2: linha neutra fora da mesa
-        elif y > girder.d1:
-            Md2 = 0.68 * girder.tw * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45)
+        elif y_lim > variavel_base:
+            # Md1 = 0.85 * fcd_calc * (variavel_base - secao.tw) * variavel_base * (d - 0.5 * variavel_base)
+            Md1 = 0.85 * fcd_calc * (secao.b1 - secao.tw) * variavel_base * (d - 0.5 * variavel_base)
+            Md2 = 0.68 * secao.tw * d**2 * 0.45 * fcd_calc * (1 - 0.4 * 0.45)
             Md_linha = Md - Md1 - Md2
-            As_linha2 = Md_linha / (fyd(fy) * (d - d_duas_linhas))
-            As_calculado += As1 + As_linha2
+            As_linha = Md_linha / (fyd_calc * (d - d_duas_linhas))
+            As2 = 0.68 * secao.tw * d * epslon_corrigido * fcd_calc / fyd_calc
+            As_calculado = As1 + As2 + As_linha
 
-    aco_minimo = As_min(taxa_minima_armadura(fck / 1e6), secao.tw, d, cobrimento)
+    # Passo 4: Cálcular As min
+    As_minimo = As_min(taxa_minima_armadura(fck / 1e6), secao.tw, d, cobrimento)
 
-    if As_calculado < aco_minimo:
-        As_adotado = aco_minimo
+    # Passo 5: Determinar o As_adotado
+    if As_calculado < As_minimo:
+        As_adotado = As_minimo
     else:
         As_adotado = As_calculado
 
+    # Passo 6: Cálcula o número de bitolas
     num_bitolas = arredonda_pra_cima(As_adotado / area_bitola(diametro_bitola))
 
-    return epslon, x, y, dominio, As_adotado, num_bitolas
+    return epslon, x, y, dominio, As_adotado, As_minimo, As_calculado, num_bitolas
 
 def dimensionar_armadura_de_pele(secao: GirderSection, diametro_bitola_pele: float):
     As_pele_calculado = As_pele(secao.tw, (secao.d1 + secao.d2 + secao.d3 + secao.d4 + secao.d5))
@@ -209,10 +227,9 @@ def dimensionar_armadura_transversal(
         d,
         fck,
         fy,
-        Vsg,
-        Vsq
+        Vsd
 ):
-    Vsd = 1.35 * Vsg + 1.5 * Vsq
+
     alfa_v2_calc = alfa_v2(fck)
     Vrd2_calc = Vrd2(alfa_v2_calc, fcd(fck), secao.tw, d)
     if Vsd < Vrd2_calc:
@@ -304,21 +321,21 @@ def espacamento_armadura_longitudinal(
     return espacamento_min_horizontal, espacamento_min_vertical, num_max_de_bitolas_por_camada, num_de_camadas, num_max_de_camadas, d_real
 
 
-def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos):
+def main(gider: GirderSection, Md, Vsd, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos):
     print(bl(f'PRIMEIRA ITERAÇÃO: Considerando d = h - cobrimento'))
     d = (gider.d1 + gider.d2 + gider.d3 + gider.d4 + gider.d5) - cobrimento
-    epslon, x, y, dominio, As_longitudinal, num_bitolas_longitudinal = dimensionar_armadura_longitudinal(
+
+    epslon, x, y, dominio, As_longitudinal, As_minimo, As_calculado, num_bitolas_longitudinal = dimensionar_armadura_longitudinal(
         secao=gider,
         fck=fck,
         fy=fy,
         diametro_bitola=diametro_bitola,
         d=d,
         cobrimento=cobrimento,
-        Mg=Mg,
-        Mq=Mq,
+        Md=Md
     )
     print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
-    print(f'Area de aço adotado={As_longitudinal*1e4:.2f}cm² -> {num_bitolas_longitudinal} Ø {diametro_bitola*1e3:.1f}mm')
+    print(f'As_min={As_minimo*1e4:.2f}cm² As_calculado={As_calculado*1e4:.2f}cm² Area de aço adotado={As_longitudinal*1e4:.2f}cm²  -> {num_bitolas_longitudinal} Ø {diametro_bitola*1e3:.1f}mm')
 
     As_pele, num_bitolas_pele = dimensionar_armadura_de_pele(
         secao=gider,
@@ -333,10 +350,8 @@ def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_b
         d=d,
         fck=fck,
         fy=fy,
-        Vsg=Vsg,
-        Vsq=Vsq,
+        Vsd=Vsd
     )
-    Vsd = 1.35 * Vsg + 1.5 * Vsq
 
     print(f'Area de aço estribos={As_estribo*1e4:.2f}cm²/m -> {num_estribos}x{num_ramos} Ø {diametro_estribo*1e3:.1f}mm/m')
     print(f'Consumo esforço cortante = {Vsd/Vrd2_calc * 100:.2f}%')
@@ -378,18 +393,17 @@ def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_b
         print(bl(f'EXECUTANDO {iteracao} ITERAÇÃO DA CORREÇÃO DO CENTROIDE DAS ARMADURAS.'))
         iteracao += 1
         d = d_real
-        epslon, x, y, dominio, As_longitudinal, num_bitolas_longitudinal = dimensionar_armadura_longitudinal(
+        epslon, x, y, dominio, As_longitudinal, As_minimo, As_calculado, num_bitolas_longitudinal = dimensionar_armadura_longitudinal(
             secao=gider,
             fck=fck,
             fy=fy,
             diametro_bitola=diametro_bitola,
             d=d,
             cobrimento=cobrimento,
-            Mg=Mg,
-            Mq=Mq,
+            Md=Md
         )
         print(f'x/d={epslon} x={x} y={y} Domínio {dominio}')
-        print(f'Area de aço adotado={As_longitudinal*1e4:.2f}cm² -> {num_bitolas_longitudinal} Ø {diametro_bitola*1e3:.1f}mm')
+        print(f'As_min={As_minimo*1e4:.2f}cm² As_calculado={As_calculado*1e4:.2f}cm² Area de aço adotado={As_longitudinal*1e4:.2f}cm²  -> {num_bitolas_longitudinal} Ø {diametro_bitola*1e3:.1f}mm')
 
         As_pele, num_bitolas_pele = dimensionar_armadura_de_pele(
             secao=gider,
@@ -404,10 +418,8 @@ def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_b
             d=d,
             fck=fck,
             fy=fy,
-            Vsg=Vsg,
-            Vsq=Vsq,
+            Vsd=Vsd
         )
-        Vsd = 1.35 * Vsg + 1.5 * Vsq
 
         print(f'Area de aço estribos={As_estribo*1e4:.2f}cm²/m -> {num_estribos}x{num_ramos} Ø {diametro_estribo*1e3:.1f}mm/m')
         print(f'Consumo esforço cortante = {Vsd/Vrd2_calc * 100:.2f}%')
@@ -436,16 +448,56 @@ def main(gider: GirderSection, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_b
             print(f'Numero de camadas: {num_de_camadas}. Descrição:')
             for i in range(num_de_camadas):
                 if i < (num_de_camadas - 1):
-                    print(f'    {i+1}ª possui {num_max_de_bitolas_por_camada} Ø c/ {espacamento_min_horizontal*1e2}cm')
+                    print(f'    {i+1} possui {num_max_de_bitolas_por_camada} Ø c/ {espacamento_min_horizontal*1e2}cm')
                 else:
                     qtd_ultima_camada = num_bitolas_longitudinal - (num_de_camadas - 1) * num_max_de_bitolas_por_camada
-                    print(f'    {i+1}ª possui {qtd_ultima_camada} Ø c/ pelo menos {espacamento_min_horizontal*1e2}cm')
+                    print(f'    {i+1} possui {qtd_ultima_camada} Ø c/ pelo menos {espacamento_min_horizontal*1e2}cm')
 
         print(f'd={d} d_real={d_real} {((d - d_real) / (gider.d1 + gider.d2 + gider.d3 + gider.d4 + gider.d5)*100):.2f}% de diferença.')
         print()
 
 
 def dados():
+    '''
+    Return:
+    -------
+
+    'key': value
+
+    'girder': girder
+
+    'L': L
+
+    'PP': PP
+
+    'Mg': Mg
+
+    'Mq': Mq
+
+    'Md': Md
+
+    'Vsg': Vsg
+
+    'Vsq': Vsq
+
+    'Vsd': Vsd
+
+    'fck': fck
+
+    'fy': fy
+
+    'cobrimento': cobrimento
+
+    'diametro_bitola': diametro_bitola
+
+    'diametro_bitola_pele': diametro_bitola_pele
+
+    'diametro_estribo': diametro_estribo
+
+    'bitola_agregado': bitola_agregado
+
+    'num_ramos': num_ramos
+    '''
     # Seção Girder
     girder = GirderSection(
         b1=2.43,
@@ -468,8 +520,11 @@ def dados():
     # Solicitações
     Mg = (PP * L**2 / 8) * 1e3
     Mq = 3443.9e3
+    Md = 1.35 * Mg + 1.5 * Mq
+
     Vsg = (PP * L) * 1e3 / 2
     Vsq = 571.1e3
+    Vsd = 1.35 * Vsg + 1.5 * Vsq
 
     # Concreto
     fck = 30e6
@@ -480,6 +535,7 @@ def dados():
     cobrimento = 0.04
 
     diametro_bitola = 25e-3
+
     diametro_bitola_pele = 10e-3
     diametro_estribo = 10e-3
 
@@ -493,8 +549,10 @@ def dados():
         'PP': PP,
         'Mg': Mg,
         'Mq': Mq,
+        'Md': Md,
         'Vsg': Vsg,
         'Vsq': Vsq,
+        'Vsd': Vsd,
         'fck': fck,
         'fy': fy,
         'cobrimento': cobrimento,
@@ -515,8 +573,10 @@ if __name__ == '__main__':
     girder = data['girder']
     Mg = data['Mg']
     Mq = data['Mq']
+    Md = data['Md']
     Vsg = data['Vsg']
     Vsq = data['Vsq']
+    Vsd = data['Vsd']
     fck = data['fck']
     fy = data['fy']
     cobrimento = data['cobrimento']
@@ -526,36 +586,166 @@ if __name__ == '__main__':
     bitola_agregado = data['bitola_agregado']
     num_ramos = data['num_ramos']
 
-    print(ye(f'Hipótese 1:'))
-    main(girder, Mg, Mq, Vsg, Vsq, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos)
+    # print(ye(f'Hipótese 1:'))
+    # main(girder, Md, Vsd, fck, fy, cobrimento, diametro_bitola, diametro_bitola_pele, diametro_estribo, bitola_agregado, num_ramos)
+
+    # print(ye(f'Hipótese 2:'))
+    # main(
+    #     GirderSection(
+    #         # b1=1.07893,
+    #         b1=1.079,
+    #         b2=0.5,
+    #         tw=0.2,
+
+    #         d1=0.2,
+    #         d2=0,
+    #         d3=0.5,
+    #         d4=0,
+    #         d5=0.5,
+    #     ),
+    #     6000e3,
+    #     0,
+    #     fck,
+    #     fy,
+    #     cobrimento,
+    #     25 * 1e-3,
+    #     6.3 * 1e-3,
+    #     6.3 * 1e-3,
+    #     bitola_agregado,
+    #     1
+    # )
+
+    # print(ye(f'Hipótese 3:'))
+    # main(
+    #     GirderSection(
+    #         b1=0.5,
+    #         b2=0.5,
+    #         tw=0.5,
+
+    #         d1=0,
+    #         d2=0,
+    #         d3=0,
+    #         d4=0,
+    #         d5=0.5,
+    #     ),
+    #     700e3,
+    #     0,
+    #     fck,
+    #     fy,
+    #     cobrimento,
+    #     40 * 1e-3,
+    #     6.3 * 1e-3,
+    #     6.3 * 1e-3,
+    #     bitola_agregado,
+    #     1
+    # )
+
+    # print(ye(f'Teste programa tqs:'))
+    # main(
+    #     GirderSection(
+    #         b1=1,
+    #         b2=0.2,
+    #         tw=0.2,
+
+    #         d1=0.2,
+    #         d2=0,
+    #         d3=0.4,
+    #         d4=0,
+    #         d5=0.2
+    #     ),
+    #     7e3,
+    #     8.4e3,
+    #     20e6,
+    #     fy,
+    #     cobrimento,
+    #     40 * 1e-3,
+    #     6.3 * 1e-3,
+    #     6.3 * 1e-3,
+    #     bitola_agregado,
+    #     1
+    # )
+
+    # Concreto
+    bitola_agregado = (3 / 4) * 2.54e-2
+    fck = 30e6
+
+    # Aço
+    num_ramos = 2
+    fy = 500e6
+
+    d_linha = 0.04
+
+    diametro_bitola = 25
+    diametro_bitola_pele = 10
+    diametro_estribo = 10
+    bitola_agregado = (3 / 4) * 2.54e-2
+    num_ramos = 2
 
     girder = GirderSection(
-        # b1=1.07893,
-        b1=1.079,
-        b2=0.5,
-        tw=0.2,
+        b1=2.43,
+        b2=0.8,
+        tw=0.7,
 
         d1=0.2,
         d2=0,
-        d3=0.5,
+        d3=0.4,
         d4=0,
-        d5=0.5,
+        d5=0.3
     )
 
-    print(ye(f'Hipótese 2:'))
-    main(girder, 6_000e3, 0, 0, 0, fck, fy, cobrimento, 25 * 1e-3, 6.3 * 1e-3, 6.3 * 1e-3, bitola_agregado, 1)
-
-    girder = GirderSection(
-        b1=0.5,
-        b2=0.5,
-        tw=0.5,
-
-        d1=0,
-        d2=0,
-        d3=0,
-        d4=0,
-        d5=0.5,
+    main(
+        girder,
+        6550e3,
+        1070e3,
+        fck,
+        fy,
+        d_linha,
+        # d,
+        diametro_bitola * 1e-3,
+        diametro_bitola_pele * 1e-3,
+        diametro_estribo * 1e-3,
+        bitola_agregado,
+        num_ramos
     )
 
-    print(ye(f'Hipótese 3:'))
-    main(girder, 500e3, 0, 0, 0, fck, fy, cobrimento, 40 * 1e-3, 6.3 * 1e-3, 6.3 * 1e-3, bitola_agregado, 1)
+    # h = 1.4 # m
+    # b = 0.9 # m
+
+    # Md = 8142735.044499999
+    # Vsd = 2553530.0
+
+    # fck = 30e6 # Pa
+    # fy = 500e6 # Pa
+    # cobrimento = 0.04 # m
+
+    # diametro_bitola = 25
+    # diametro_bitola_pele = 10
+    # diametro_estribo = 10
+    # bitola_agregado = (3 / 4) * 2.54e-2
+    # num_ramos = 2
+
+    # main(
+    #     GirderSection(
+    #         b1=b,
+    #         b2=b,
+    #         tw=b,
+
+    #         d1=0,
+    #         d2=0,
+    #         d3=0,
+    #         d4=0,
+    #         d5=h
+    #     ),
+    #     Md,
+    #     Vsd,
+    #     fck,
+    #     fy,
+    #     cobrimento,
+    #     diametro_bitola * 1e-3,
+    #     diametro_bitola_pele * 1e-3,
+    #     diametro_estribo * 1e-3,
+    #     bitola_agregado,
+    #     num_ramos
+    # )
+
+

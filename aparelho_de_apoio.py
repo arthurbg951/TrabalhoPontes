@@ -1,4 +1,10 @@
 import math
+'''
+EUROPEAN STANDARD
+EN 1337-3
+NORME EUROPÉENNE
+EUROPÄISCHE NORM
+'''
 
 # Dados da Geometria Aparelho de apoio.
 a = 400  # dimensão a (mm).
@@ -9,8 +15,8 @@ te = 12  # Espessura do Elastômero (mm).
 camadaex = 2.5  # Espessura da camada externa de Elastômero (mm).
 Borda_externa = 4
 
-# Dados de Entrada.
 
+# Dados de Entrada.
 Vxd = 38.28  # deslocamento (mm)
 Vyd = 7.36  # deslocamento (mm)
 Fzk = 2140e3  # Força (N) - Reações da longarina
