@@ -13,9 +13,9 @@ S1 = 1
 
 # Fator de Rugosidade e Dimensão
 # Classe B + Categoria I
-h = 7  # m
+h = 8.9  # m
 z = h / 2
-S2 = interpolar(5, 10, 1.04, 1.09, z)
+S2 = interpolar(5, 10, 1.04, 1.09, z) # se altura tiver entre 5 e 10
 
 # Fator Estatístico
 # Ruína total ou parcial pode afetar a segurança ou possibilidade de
@@ -36,12 +36,16 @@ print(f'Vento a 0°: l1/l2={l1/l2:.2f} h/l1={h/l1:.2f} isopleta={0.88}')
 # caso2 90°
 l1 = a
 l2 = b
-print(f'Vento a 90°: l1/l2={l1/l2:.2f} h/l1={h/l1:.2f} isopleta="fora da isopleta"')
+print(f'Vento a 90°: l1/l2={l1/l2:.2f} h/l1={h/l1:.2f} isopleta={1.15}')
 
-Ca = 0.88
+Ca = 1.15
 qw = Ca * 0.613 * Vk**2
 print(f'Ca={Ca} qw={qw:.2f}N/m²')
 
+
+'''
+EFEITOS DE 1ª ORDEM
+'''
 n_pilares = 2
 altura_pilar = 5.40
 raio_pilar = 0.8  # m
